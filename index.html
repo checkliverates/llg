@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -17,33 +18,35 @@ body{margin:0;min-height:100vh;display:flex;justify-content:center;align-items:c
 .time{margin-top:20px;font-size:14px;color:#777}
 .error{color:red}
 </style>
+
 </head>
 
 <body>
 <div class="box">
   <div class="title">LIVE PRICES</div>
   <div id="status" class="status">CONNECTING...</div>
+
   <div class="label">XAU</div>
   <div class="small-row"><span>Bid</span><span id="xauBid">---</span></div>
   <div class="small-row"><span>Ask</span><span id="xauAsk">---</span></div>
+
   <div class="label" style="margin-top:25px">P1kKGG</div>
   <div class="small-row"><span>Bid</span><span id="p1Bid">---</span></div>
   <div class="small-row"><span>Ask</span><span id="p1Ask">---</span></div>
+
   <div id="time" class="time">Waiting for live data...</div>
 </div>
 
 <script>
 (() => {
   /*
-    CORRECT TEST 1
-    Based directly on the previously working Socket.IO connection.
-
-    Test markup: +0.50
-    This is only obscured, NOT secure.
+    P1kKGG:
+    Example:
+    139188 → 13918 → /100 → 139.18 → +0.30 → 139.48
+    139358 → 13935 → /100 → 139.35 → +0.30 → 139.65
   */
 
-  // "0.50" is reconstructed instead of written as a normal markup variable.
-  const _d = [48,46,53,48];
+  const _d = [48,46,51,48];
   const _x = Number(String.fromCharCode(..._d));
 
   // Same server/namespace structure as the working code.
@@ -77,23 +80,57 @@ body{margin:0;min-height:100vh;display:flex;justify-content:center;align-items:c
       const _products = data && data.products;
       if (!_products) return;
 
+      // =========================
+      // XAU - ORIGINAL LOGIC
+      // =========================
       const _xau = _products["XAU="];
+
       if (_xau) {
         const _xbv = parseFloat(_xau.buy);
         const _xav = parseFloat(_xau.sell);
-        if (!isNaN(_xbv)) _xb.innerText = _xbv.toFixed(1);
-        if (!isNaN(_xav)) _xa.innerText = _xav.toFixed(1);
+
+        if (!isNaN(_xbv)) {
+          _xb.innerText = _xbv.toFixed(1);
+        }
+
+        if (!isNaN(_xav)) {
+          _xa.innerText = _xav.toFixed(1);
+        }
       }
 
+      // =========================
+      // P1kKGG - NEW LOGIC
+      // =========================
       const _p1 = _products["P1kKGG"];
+
       if (_p1) {
         const _pbv = parseFloat(_p1.buy);
         const _pav = parseFloat(_p1.sell);
-        if (!isNaN(_pbv)) _pb.innerText = (_pbv + _x).toFixed(1);
-        if (!isNaN(_pav)) _pa.innerText = (_pav + _x).toFixed(1);
+
+        /*
+          Last digit remove:
+          139188 → 13918
+
+          Then /100:
+          13918 / 100 = 139.18
+
+          Then +0.30:
+          139.18 + 0.30 = 139.48
+        */
+
+        if (!isNaN(_pbv)) {
+          const _finalBid = Math.floor(_pbv / 10) / 100 + _x;
+          _pb.innerText = _finalBid.toFixed(2);
+        }
+
+        if (!isNaN(_pav)) {
+          const _finalAsk = Math.floor(_pav / 10) / 100 + _x;
+          _pa.innerText = _finalAsk.toFixed(2);
+        }
       }
 
       _tm.innerText = "LIVE • " + new Date().toLocaleTimeString();
+
     } catch (_) {}
   });
 
@@ -113,5 +150,6 @@ body{margin:0;min-height:100vh;display:flex;justify-content:center;align-items:c
   });
 })();
 </script>
+
 </body>
 </html>
