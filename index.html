@@ -1,79 +1,98 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>LLG Live Price</title>
-  <style>
-    body{margin:0;background:#111;color:#fff;font-family:Arial,sans-serif;display:grid;place-items:center;min-height:100vh}
-    .box{text-align:center;padding:28px 36px;border-radius:14px;background:#1c1c1c;box-shadow:0 8px 30px #0008}
-    .label{font-size:16px;opacity:.7;margin-bottom:10px}
-    .price{font-size:48px;font-weight:700;letter-spacing:.5px}
-    .status{font-size:12px;opacity:.5;margin-top:12px}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLG Live Test</title>
+
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@2.5.0/dist/socket.io.js"></script>
+
+<style>
+body{margin:0;min-height:100vh;display:flex;justify-content:center;align-items:center;background:#f5f5f5;font-family:Arial,sans-serif}
+.box{width:350px;padding:35px;text-align:center;background:white;border-radius:15px;box-shadow:0 5px 25px rgba(0,0,0,.12)}
+.title{font-size:24px;font-weight:bold;margin-bottom:25px}
+.status{font-size:18px;margin-bottom:30px}
+.label{font-size:18px;margin-bottom:10px}
+.price{font-size:60px;font-weight:bold}
+.time{margin-top:20px;font-size:14px;color:#777}
+.error{color:red}
+</style>
 </head>
+
 <body>
-  <div class="box">
-    <div class="label">LLG</div>
-    <div class="price" id="p">----</div>
-    <div class="status" id="s">Connecting...</div>
-  </div>
+<div class="box">
+  <div class="title">LLG LIVE TEST</div>
+  <div id="status" class="status">CONNECTING...</div>
+  <div class="label">LLG PRICE</div>
+  <div id="price" class="price">---</div>
+  <div id="time" class="time">Waiting for live data...</div>
+</div>
 
 <script>
 (() => {
   /*
-    TEST 1:
-    - No WFBullion page is embedded.
-    - We connect to the same public Socket.IO quote service used by the website.
-    - The markup is deliberately not named "markup" and is lightly obscured.
-    - This is NOT secure: a technical user can inspect browser network/JS.
+    CORRECT TEST 1
+    Based directly on the previously working Socket.IO connection.
+
+    Test markup: +0.50
+    This is only obscured, NOT secure.
   */
 
-  const _a = [0x30,0x2e,0x35,0x30]; // "0.50"
-  const _m = Number(String.fromCharCode(..._a));
+  // "0.50" is reconstructed instead of written as a normal markup variable.
+  const _d = [48,46,53,48];
+  const _x = Number(String.fromCharCode(..._d));
 
-  const _u = "https://quote.wfgroup.com.hk:8083/bquote";
-  const _c = document.getElementById("p");
-  const _s = document.getElementById("s");
+  // Same server/namespace structure as the working code.
+  const _s = "https://quote.wfgroup.com.hk:8083";
+  const _t = "applepieapplepieapplepieapplepie";
 
-  const _script = document.createElement("script");
-  _script.src = "https://cdn.jsdelivr.net/npm/socket.io-client@2.5.0/dist/socket.io.js";
-  _script.onload = () => {
-    const _x = io(_u, {
-      transports: ["websocket"],
-      reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 1000
-    });
+  const _socket = io(_s + "/bquote", {
+    transports: ["websocket"],
+    query: { token: _t },
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 10000
+  });
 
-    _x.on("connect", () => {
-      _s.textContent = "LIVE";
-    });
+  const _p = document.getElementById("price");
+  const _st = document.getElementById("status");
+  const _tm = document.getElementById("time");
 
-    _x.on("disconnect", () => {
-      _s.textContent = "Reconnecting...";
-    });
+  _socket.on("connect", () => {
+    _st.innerText = "CONNECTED";
+    _st.className = "status";
+  });
 
-    _x.on("connect_error", () => {
-      _s.textContent = "Connection error";
-    });
+  _socket.on("quote.realtime", (data) => {
+    try {
+      const _q = data && data.products && data.products["XAU="];
+      if (!_q) return;
 
-    _x.on("quote.realtime", (data) => {
-      try {
-        const _v = Number(data?.products?.["XAU="]?.buy);
-        if (!Number.isFinite(_v)) return;
+      const _b = parseFloat(_q.buy);
+      if (isNaN(_b)) return;
 
-        const _final = (_v + _m).toFixed(1);
-        _c.textContent = _final;
-      } catch (_) {}
-    });
-  };
+      // Customer-facing price = BID + hidden test difference.
+      _p.innerText = (_b + _x).toFixed(1);
+      _tm.innerText = "LIVE • " + new Date().toLocaleTimeString();
+    } catch (_) {}
+  });
 
-  _script.onerror = () => {
-    _s.textContent = "Socket library failed";
-  };
+  _socket.on("disconnect", () => {
+    _st.innerText = "RECONNECTING...";
+    _st.className = "status";
+  });
 
-  document.head.appendChild(_script);
+  _socket.on("connect_error", () => {
+    _st.innerText = "CONNECTION ERROR";
+    _st.className = "status error";
+  });
+
+  _socket.on("reconnect", () => {
+    _st.innerText = "CONNECTED";
+    _st.className = "status";
+  });
 })();
 </script>
 </body>
