@@ -83,6 +83,8 @@ body{
 
   <div id="status" class="status">CONNECTING...</div>
 
+  <!-- XAU -->
+
   <div class="label">XAU</div>
 
   <div class="small-row">
@@ -94,6 +96,8 @@ body{
     <span>Ask</span>
     <span id="xauAsk">---</span>
   </div>
+
+  <!-- P1kKGG -->
 
   <div class="label" style="margin-top:25px">
     P1kKGG
@@ -120,13 +124,19 @@ body{
 
   /*
   ============================================================
-  MARKUP
+  P1kKGG MARKUP
   ============================================================
-  P1kKGG ke liye +0.30
+
+  Required markup = +0.30
+
+  0.30 is reconstructed below.
   */
 
   const _d = [48,46,51,48];
-  const _x = Number(String.fromCharCode(..._d));
+
+  const _x = Number(
+    String.fromCharCode(..._d)
+  );
 
 
   /*
@@ -203,7 +213,7 @@ body{
 
   /*
   ============================================================
-  REALTIME PRICE DATA
+  REALTIME DATA
   ============================================================
   */
 
@@ -222,11 +232,22 @@ body{
       ==========================================================
       XAU
       ==========================================================
-      ORIGINAL LOGIC - NO CHANGE
+
+      Actual key:
+
+      XAU=
+
+      Example:
+
+      buy  = 4330.9
+      sell = 4331.4
+
+      ORIGINAL XAU LOGIC - NO CHANGE
       ==========================================================
       */
 
       const _xau = _products["XAU="];
+
 
       if (_xau) {
 
@@ -255,82 +276,50 @@ body{
       ==========================================================
       P1kKGG
       ==========================================================
-      FIND METHOD 1:
-      Direct key
 
-      FIND METHOD 2:
-      Object ke andar id === "P1kKGG"
-      ==========================================================
-      */
+      IMPORTANT:
 
-      let _p1 = _products["P1kKGG"];
+      Actual key is:
 
+      P1kKGG=
 
-      if (!_p1) {
+      NOT:
 
-        const _productList = Object.values(_products);
-
-        _p1 = _productList.find(
-
-          p => p && p.id === "P1kKGG"
-
-        );
-
-      }
-
-
-      /*
-      ==========================================================
-      P1kKGG PRICE CALCULATION
-      ==========================================================
-      
-      Example BUY:
-
-      139188
-      ↓
-      last digit remove
-      ↓
-      13918
-      ↓
-      /100
-      ↓
-      139.18
-      ↓
-      +0.30
-      ↓
-      139.48
-
-
-      Example SELL:
-
-      139358
-      ↓
-      last digit remove
-      ↓
-      13935
-      ↓
-      /100
-      ↓
-      139.35
-      ↓
-      +0.30
-      ↓
-      139.65
+      P1kKGG
 
       ==========================================================
       */
+
+      const _p1 = _products["P1kKGG="];
 
 
       if (_p1) {
 
-        const _pbv = parseFloat(_p1.buy);
+        const _pbv = Number(_p1.buy);
 
-        const _pav = parseFloat(_p1.sell);
+        const _pav = Number(_p1.sell);
 
 
         /*
         ========================================================
         P1kKGG BID
+        ========================================================
+
+        Example:
+
+        139188
+        ↓
+        last digit removed
+        ↓
+        13918
+        ↓
+        /100
+        ↓
+        139.18
+        ↓
+        +0.30
+        ↓
+        139.48
         ========================================================
         */
 
@@ -339,7 +328,8 @@ body{
           const _finalBid =
             Math.floor(_pbv / 10) / 100 + _x;
 
-          _pb.innerText = _finalBid.toFixed(2);
+          _pb.innerText =
+            _finalBid.toFixed(2);
 
         }
 
@@ -348,6 +338,23 @@ body{
         ========================================================
         P1kKGG ASK
         ========================================================
+
+        Example:
+
+        139358
+        ↓
+        last digit removed
+        ↓
+        13935
+        ↓
+        /100
+        ↓
+        139.35
+        ↓
+        +0.30
+        ↓
+        139.65
+        ========================================================
         */
 
         if (!isNaN(_pav)) {
@@ -355,7 +362,8 @@ body{
           const _finalAsk =
             Math.floor(_pav / 10) / 100 + _x;
 
-          _pa.innerText = _finalAsk.toFixed(2);
+          _pa.innerText =
+            _finalAsk.toFixed(2);
 
         }
 
@@ -376,7 +384,7 @@ body{
     } catch (_) {
 
       /*
-      Ignore individual realtime message errors
+      Ignore individual realtime errors
       */
 
     }
