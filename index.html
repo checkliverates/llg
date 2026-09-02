@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LLG Live Test</title>
+<title>Live Prices</title>
 
 <script src="https://cdn.jsdelivr.net/npm/socket.io-client@2.5.0/dist/socket.io.js"></script>
 
@@ -13,7 +13,7 @@ body{margin:0;min-height:100vh;display:flex;justify-content:center;align-items:c
 .title{font-size:24px;font-weight:bold;margin-bottom:25px}
 .status{font-size:18px;margin-bottom:30px}
 .label{font-size:18px;margin-bottom:10px}
-.price{font-size:60px;font-weight:bold}
+.price{font-size:60px;font-weight:bold}.small-row{display:flex;justify-content:space-between;align-items:center;font-size:22px;font-weight:bold;padding:8px 5px}.small-row span:last-child{font-size:30px}
 .time{margin-top:20px;font-size:14px;color:#777}
 .error{color:red}
 </style>
@@ -21,10 +21,14 @@ body{margin:0;min-height:100vh;display:flex;justify-content:center;align-items:c
 
 <body>
 <div class="box">
-  <div class="title">LLG LIVE TEST</div>
+  <div class="title">LIVE PRICES</div>
   <div id="status" class="status">CONNECTING...</div>
-  <div class="label">LLG PRICE</div>
-  <div id="price" class="price">---</div>
+  <div class="label">XAU</div>
+  <div class="small-row"><span>Bid</span><span id="xauBid">---</span></div>
+  <div class="small-row"><span>Ask</span><span id="xauAsk">---</span></div>
+  <div class="label" style="margin-top:25px">P1kKGG</div>
+  <div class="small-row"><span>Bid</span><span id="p1Bid">---</span></div>
+  <div class="small-row"><span>Ask</span><span id="p1Ask">---</span></div>
   <div id="time" class="time">Waiting for live data...</div>
 </div>
 
@@ -56,7 +60,10 @@ body{margin:0;min-height:100vh;display:flex;justify-content:center;align-items:c
     timeout: 10000
   });
 
-  const _p = document.getElementById("price");
+  const _xb = document.getElementById("xauBid");
+  const _xa = document.getElementById("xauAsk");
+  const _pb = document.getElementById("p1Bid");
+  const _pa = document.getElementById("p1Ask");
   const _st = document.getElementById("status");
   const _tm = document.getElementById("time");
 
@@ -67,14 +74,25 @@ body{margin:0;min-height:100vh;display:flex;justify-content:center;align-items:c
 
   _socket.on("quote.realtime", (data) => {
     try {
-      const _q = data && data.products && data.products["XAU="];
-      if (!_q) return;
+      const _products = data && data.products;
+      if (!_products) return;
 
-      const _b = parseFloat(_q.buy);
-      if (isNaN(_b)) return;
+      const _xau = _products["XAU="];
+      if (_xau) {
+        const _xbv = parseFloat(_xau.buy);
+        const _xav = parseFloat(_xau.sell);
+        if (!isNaN(_xbv)) _xb.innerText = _xbv.toFixed(1);
+        if (!isNaN(_xav)) _xa.innerText = _xav.toFixed(1);
+      }
 
-      // Customer-facing price = BID + hidden test difference.
-      _p.innerText = (_b + _x).toFixed(1);
+      const _p1 = _products["P1kKGG"];
+      if (_p1) {
+        const _pbv = parseFloat(_p1.buy);
+        const _pav = parseFloat(_p1.sell);
+        if (!isNaN(_pbv)) _pb.innerText = (_pbv + _x).toFixed(1);
+        if (!isNaN(_pav)) _pa.innerText = (_pav + _x).toFixed(1);
+      }
+
       _tm.innerText = "LIVE • " + new Date().toLocaleTimeString();
     } catch (_) {}
   });
